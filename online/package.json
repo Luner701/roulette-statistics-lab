@@ -1,0 +1,16 @@
+{
+  "name": "roulette-statistics-lab-online",
+  "version": "1.0.0",
+  "description": "Multiplayer online roulette statistics lab: one admin per table, players self-register and bet from their own device.",
+  "private": true,
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}

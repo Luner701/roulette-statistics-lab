@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Join Table &mdash; Roulette Statistics Lab</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-mark" aria-hidden="true">●</span>
+    <div>
+      <h1 id="tableNameHeading">Roulette Statistics Lab</h1>
+      <p class="tagline">Virtual chips only, no real money involved.</p>
+    </div>
+  </div>
+  <button id="themeToggle" class="btn btn-ghost" type="button" aria-label="Toggle color theme">🌙</button>
+</header>
+
+<main>
+  <div class="panel registration-card" id="registrationCard" hidden>
+    <h2>Join this table</h2>
+    <p id="registrationNote">Pick a name &mdash; you'll bet from this device for the rest of the session.</p>
+    <form id="registerForm">
+      <input id="playerName" type="text" maxlength="24" placeholder="Your name" required>
+      <button type="submit" class="btn btn-primary">Join</button>
+    </form>
+  </div>
+
+  <div class="layout" id="app" hidden>
+    <div class="identity-banner" id="identityBanner"></div>
+
+    <section class="panel" aria-labelledby="boardHeading">
+      <h2 id="boardHeading">Place bets for the next spin</h2>
+      <p class="board-instructions">Pick a chip, then click a spot on the table. Right-click a spot to remove your own bet before the spin. Bets stay visible after the spin so you can see the results.</p>
+
+      <div class="board-controls">
+        <div class="control-group">
+          <span class="control-label">Chip</span>
+          <div id="chipTray" class="chip-tray"></div>
+        </div>
+      </div>
+
+      <div class="board-wrap">
+        <div id="bettingBoard" class="betting-board"></div>
+      </div>
+
+      <div class="table-wrap">
+        <table class="data-table" id="pendingBetsTable">
+          <thead><tr><th>Player</th><th>Bet</th><th>Amount</th><th>Result</th></tr></thead>
+          <tbody id="pendingBetsBody"></tbody>
+        </table>
+        <p class="empty-hint" id="pendingEmptyHint">No bets placed yet for the upcoming spin.</p>
+      </div>
+
+      <details class="payout-ref">
+        <summary>Payout reference &mdash; reward scales with how unlikely the bet is</summary>
+        <div class="table-wrap">
+          <table class="data-table" id="payoutRefTable">
+            <thead><tr><th>Bet</th><th>Pays</th><th>True probability</th></tr></thead>
+            <tbody id="payoutRefBody"></tbody>
+          </table>
+        </div>
+      </details>
+    </section>
+
+    <section class="panel wheel-panel" aria-labelledby="wheelHeading">
+      <h2 id="wheelHeading">The wheel</h2>
+      <div class="wheel-stage">
+        <div class="wheel-pointer" aria-hidden="true"></div>
+        <div class="wheel-disc" id="wheelDisc"></div>
+      </div>
+      <div class="spin-controls">
+        <div class="result-readout" id="resultReadout" aria-live="polite"></div>
+        <div class="round-summary" id="roundSummary" aria-live="polite" hidden></div>
+      </div>
+      <div class="results-ticker" id="resultsTicker" aria-label="Recent spin results"></div>
+    </section>
+
+    <section class="panel stats-panel" aria-labelledby="statsHeading">
+      <h2 id="statsHeading">Statistics</h2>
+      <div class="tiles-row" id="summaryTiles"></div>
+
+      <div class="viz-root chart-card">
+        <h3>Number frequency <span class="muted">(observed vs. expected 1/37)</span></h3>
+        <div id="numberChart" class="chart-svg-wrap"></div>
+      </div>
+
+      <div class="chart-grid">
+        <div class="viz-root chart-card">
+          <h3>Color distribution</h3>
+          <div id="colorChart" class="chart-svg-wrap"></div>
+        </div>
+        <div class="viz-root chart-card">
+          <h3>Net result by player</h3>
+          <div id="playerChart" class="chart-svg-wrap"></div>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table class="data-table" id="playerStatsTable">
+          <thead><tr><th>Player</th><th>Status</th><th>Bets</th><th>Wagered</th><th>Won</th><th>Net</th><th>Win rate</th></tr></thead>
+          <tbody id="playerStatsBody"></tbody>
+        </table>
+        <p class="empty-hint" id="statsEmptyHint">No spins recorded yet.</p>
+      </div>
+    </section>
+
+    <p class="connection-note" id="connectionNote"></p>
+  </div>
+</main>
+
+<p class="landing-error" id="loadError" style="text-align:center; padding:40px 20px;"></p>
+
+<footer class="foot-note">
+  Educational statistics simulation. Balances are virtual chips with no monetary value and no real-world payout.
+</footer>
+
+<div class="toast" id="toast" hidden></div>
+<div class="tooltip" id="chartTooltip" role="tooltip" hidden></div>
+
+<script src="domain.js"></script>
+<script src="common.js"></script>
+<script src="api.js"></script>
+<script src="play.js"></script>
+</body>
+</html>

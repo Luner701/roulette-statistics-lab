@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Roulette Statistics Lab</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-mark" aria-hidden="true">●</span>
+    <div>
+      <h1>Roulette Statistics Lab</h1>
+      <p class="tagline">A probability &amp; betting-behavior simulation &mdash; virtual chips only, no real money involved.</p>
+    </div>
+  </div>
+  <button id="themeToggle" class="btn btn-ghost" type="button" aria-label="Toggle color theme">🌙</button>
+</header>
+
+<main class="layout">
+
+  <section class="panel" id="registrationPanel" aria-labelledby="registrationHeading">
+    <h2 id="registrationHeading">1 &middot; Register players</h2>
+    <form id="registerForm" class="inline-form">
+      <div class="field">
+        <label for="playerName">Name</label>
+        <input id="playerName" name="playerName" type="text" maxlength="24" placeholder="e.g. Marco" required>
+      </div>
+      <div class="field">
+        <label for="startingBalance">Starting balance</label>
+        <input id="startingBalance" name="startingBalance" type="number" min="1" step="1" value="1000" required>
+      </div>
+      <button type="submit" class="btn btn-primary">Add player</button>
+    </form>
+    <div class="table-wrap">
+      <table class="data-table" id="playersTable">
+        <thead><tr><th><input type="checkbox" id="selectAllPlayers" title="Select all"></th><th>Player</th><th>Balance</th><th></th></tr></thead>
+        <tbody id="playersTableBody"></tbody>
+      </table>
+      <p class="empty-hint" id="playersEmptyHint">No players registered yet &mdash; add one above to start betting.</p>
+      <div class="table-actions">
+        <button id="deleteSelectedBtn" class="btn btn-ghost btn-danger btn-small" type="button" disabled>Delete selected</button>
+        <button id="deleteAllPlayersBtn" class="btn btn-ghost btn-danger btn-small" type="button" disabled>Delete all players</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel" id="bettingPanel" aria-labelledby="bettingHeading">
+    <h2 id="bettingHeading">2 &middot; Place bets for the next spin</h2>
+    <p class="board-instructions">Pick who's betting, pick a chip, then click a spot on the table. Right-click a spot to remove that player's bet before you spin. Bets stay on the table after the spin so you can see the results &mdash; click "New bet" to clear it for the next round.</p>
+
+    <div class="board-controls">
+      <div class="control-group">
+        <span class="control-label">Betting as</span>
+        <div id="playerTabs" class="player-tabs"></div>
+      </div>
+      <div class="control-group">
+        <span class="control-label">Chip</span>
+        <div id="chipTray" class="chip-tray"></div>
+      </div>
+    </div>
+
+    <div class="board-wrap">
+      <div id="bettingBoard" class="betting-board"></div>
+    </div>
+
+    <div class="table-wrap">
+      <table class="data-table" id="pendingBetsTable">
+        <thead><tr><th>Player</th><th>Bet</th><th>Amount</th><th>Result</th></tr></thead>
+        <tbody id="pendingBetsBody"></tbody>
+      </table>
+      <p class="empty-hint" id="pendingEmptyHint">No bets placed yet for the upcoming spin.</p>
+    </div>
+
+    <details class="payout-ref">
+      <summary>Payout reference &mdash; reward scales with how unlikely the bet is</summary>
+      <div class="table-wrap">
+        <table class="data-table" id="payoutRefTable">
+          <thead><tr><th>Bet</th><th>Pays</th><th>True probability</th></tr></thead>
+          <tbody id="payoutRefBody"></tbody>
+        </table>
+      </div>
+    </details>
+  </section>
+
+  <section class="panel wheel-panel" id="wheelPanel" aria-labelledby="wheelHeading">
+    <h2 id="wheelHeading">3 &middot; Spin</h2>
+    <div class="wheel-stage">
+      <div class="wheel-pointer" aria-hidden="true"></div>
+      <div class="wheel-disc" id="wheelDisc"></div>
+    </div>
+    <div class="spin-controls">
+      <div class="spin-buttons">
+        <button id="spinBtn" class="btn btn-accent" type="button">Spin the wheel</button>
+        <button id="newBetBtn" class="btn btn-ghost" type="button" disabled>New bet</button>
+      </div>
+      <div class="result-readout" id="resultReadout" aria-live="polite"></div>
+      <div class="round-summary" id="roundSummary" aria-live="polite" hidden></div>
+    </div>
+    <div class="results-ticker" id="resultsTicker" aria-label="Recent spin results"></div>
+  </section>
+
+  <section class="panel stats-panel" id="statsPanel" aria-labelledby="statsHeading">
+    <div class="stats-header">
+      <h2 id="statsHeading">4 &middot; Statistics</h2>
+      <div class="stats-actions">
+        <button id="exportBtn" class="btn btn-ghost" type="button">Export data (JSON)</button>
+        <button id="resetBtn" class="btn btn-ghost btn-danger" type="button">Reset all data</button>
+      </div>
+    </div>
+
+    <div class="tiles-row" id="summaryTiles"></div>
+
+    <div class="viz-root chart-card">
+      <h3>Number frequency <span class="muted">(observed vs. expected 1/37)</span></h3>
+      <div id="numberChart" class="chart-svg-wrap"></div>
+    </div>
+
+    <div class="chart-grid">
+      <div class="viz-root chart-card">
+        <h3>Color distribution</h3>
+        <div id="colorChart" class="chart-svg-wrap"></div>
+      </div>
+      <div class="viz-root chart-card">
+        <h3>Net result by player</h3>
+        <div id="playerChart" class="chart-svg-wrap"></div>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table class="data-table" id="playerStatsTable">
+        <thead><tr><th>Player</th><th>Status</th><th>Bets</th><th>Wagered</th><th>Won</th><th>Net</th><th>Win rate</th></tr></thead>
+        <tbody id="playerStatsBody"></tbody>
+      </table>
+      <p class="empty-hint" id="statsEmptyHint">No spins recorded yet.</p>
+    </div>
+  </section>
+
+</main>
+
+<footer class="foot-note">
+  Educational statistics simulation. Balances are virtual chips with no monetary value and no real-world payout.
+</footer>
+
+<div class="toast" id="toast" hidden></div>
+<div class="tooltip" id="chartTooltip" role="tooltip" hidden></div>
+
+<script src="script.js"></script>
+</body>
+</html>

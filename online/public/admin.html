@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Table Admin &mdash; Roulette Statistics Lab</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-mark" aria-hidden="true">●</span>
+    <div>
+      <h1 id="tableNameHeading">Roulette Statistics Lab</h1>
+      <p class="tagline">Admin console &mdash; you control the wheel. Virtual chips only, no real money involved.</p>
+    </div>
+  </div>
+  <button id="themeToggle" class="btn btn-ghost" type="button" aria-label="Toggle color theme">🌙</button>
+</header>
+
+<main class="layout" id="app" hidden>
+
+  <section class="panel" aria-labelledby="joinHeading">
+    <h2 id="joinHeading">Invite players</h2>
+    <div class="join-banner">
+      <div class="join-meta">
+        <span class="label">Join code</span>
+        <span class="join-code" id="joinCodeDisplay">&mdash;</span>
+      </div>
+      <div class="join-link-row">
+        <input id="joinLinkInput" type="text" readonly>
+        <button id="copyLinkBtn" class="btn btn-ghost btn-small" type="button">Copy link</button>
+      </div>
+    </div>
+    <p class="admin-warning">This browser tab's URL is your only way to control this table &mdash; bookmark it or save the link, it cannot be recovered.</p>
+  </section>
+
+  <section class="panel" aria-labelledby="registrationHeading">
+    <h2 id="registrationHeading">Players</h2>
+    <p class="board-instructions">Players can register themselves from the join link above. You can also add a walk-up player here.</p>
+    <form id="registerForm" class="inline-form">
+      <div class="field">
+        <label for="playerName">Name</label>
+        <input id="playerName" name="playerName" type="text" maxlength="24" placeholder="e.g. Marco" required>
+      </div>
+      <div class="field">
+        <label for="startingBalance">Starting balance</label>
+        <input id="startingBalance" name="startingBalance" type="number" min="1" step="1" value="1000" required>
+      </div>
+      <button type="submit" class="btn btn-primary">Add player</button>
+    </form>
+    <div class="table-wrap">
+      <table class="data-table" id="playersTable">
+        <thead><tr><th><input type="checkbox" id="selectAllPlayers" title="Select all"></th><th>Player</th><th>Balance</th><th></th></tr></thead>
+        <tbody id="playersTableBody"></tbody>
+      </table>
+      <p class="empty-hint" id="playersEmptyHint">No players registered yet.</p>
+      <div class="table-actions">
+        <button id="deleteSelectedBtn" class="btn btn-ghost btn-danger btn-small" type="button" disabled>Delete selected</button>
+        <button id="deleteAllPlayersBtn" class="btn btn-ghost btn-danger btn-small" type="button" disabled>Delete all players</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel" aria-labelledby="boardHeading">
+    <h2 id="boardHeading">Table (live view)</h2>
+    <p class="board-instructions">This board is read-only &mdash; players place their own bets from their own device.</p>
+    <div class="board-wrap">
+      <div id="bettingBoard" class="betting-board"></div>
+    </div>
+    <div class="table-wrap">
+      <table class="data-table" id="pendingBetsTable">
+        <thead><tr><th>Player</th><th>Bet</th><th>Amount</th><th>Result</th></tr></thead>
+        <tbody id="pendingBetsBody"></tbody>
+      </table>
+      <p class="empty-hint" id="pendingEmptyHint">No bets placed yet for the upcoming spin.</p>
+    </div>
+    <details class="payout-ref">
+      <summary>Payout reference &mdash; reward scales with how unlikely the bet is</summary>
+      <div class="table-wrap">
+        <table class="data-table" id="payoutRefTable">
+          <thead><tr><th>Bet</th><th>Pays</th><th>True probability</th></tr></thead>
+          <tbody id="payoutRefBody"></tbody>
+        </table>
+      </div>
+    </details>
+  </section>
+
+  <section class="panel wheel-panel" aria-labelledby="wheelHeading">
+    <h2 id="wheelHeading">Spin</h2>
+    <div class="wheel-stage">
+      <div class="wheel-pointer" aria-hidden="true"></div>
+      <div class="wheel-disc" id="wheelDisc"></div>
+    </div>
+    <div class="spin-controls">
+      <div class="spin-buttons">
+        <button id="spinBtn" class="btn btn-accent" type="button">Spin the wheel</button>
+        <button id="newBetBtn" class="btn btn-ghost" type="button" disabled>New bet</button>
+      </div>
+      <div class="result-readout" id="resultReadout" aria-live="polite"></div>
+      <div class="round-summary" id="roundSummary" aria-live="polite" hidden></div>
+    </div>
+    <div class="results-ticker" id="resultsTicker" aria-label="Recent spin results"></div>
+  </section>
+
+  <section class="panel stats-panel" aria-labelledby="statsHeading">
+    <div class="stats-header">
+      <h2 id="statsHeading">Statistics</h2>
+      <div class="stats-actions">
+        <button id="exportBtn" class="btn btn-ghost" type="button">Export data (JSON)</button>
+        <button id="resetBtn" class="btn btn-ghost btn-danger" type="button">Reset table</button>
+      </div>
+    </div>
+
+    <div class="tiles-row" id="summaryTiles"></div>
+
+    <div class="viz-root chart-card">
+      <h3>Number frequency <span class="muted">(observed vs. expected 1/37)</span></h3>
+      <div id="numberChart" class="chart-svg-wrap"></div>
+    </div>
+
+    <div class="chart-grid">
+      <div class="viz-root chart-card">
+        <h3>Color distribution</h3>
+        <div id="colorChart" class="chart-svg-wrap"></div>
+      </div>
+      <div class="viz-root chart-card">
+        <h3>Net result by player</h3>
+        <div id="playerChart" class="chart-svg-wrap"></div>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table class="data-table" id="playerStatsTable">
+        <thead><tr><th>Player</th><th>Status</th><th>Bets</th><th>Wagered</th><th>Won</th><th>Net</th><th>Win rate</th></tr></thead>
+        <tbody id="playerStatsBody"></tbody>
+      </table>
+      <p class="empty-hint" id="statsEmptyHint">No spins recorded yet.</p>
+    </div>
+  </section>
+
+  <p class="connection-note" id="connectionNote"></p>
+</main>
+
+<p class="landing-error" id="loadError" style="text-align:center; padding:40px 20px;"></p>
+
+<footer class="foot-note">
+  Educational statistics simulation. Balances are virtual chips with no monetary value and no real-world payout.
+</footer>
+
+<div class="toast" id="toast" hidden></div>
+<div class="tooltip" id="chartTooltip" role="tooltip" hidden></div>
+
+<script src="domain.js"></script>
+<script src="common.js"></script>
+<script src="api.js"></script>
+<script src="admin.js"></script>
+</body>
+</html>
