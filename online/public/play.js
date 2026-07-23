@@ -14,15 +14,14 @@ let activeChipValue = window.RouletteDomain.CHIP_VALUES[0];
 let pollTimer = null;
 let latestState = null;
 
-function storageKey(id) { return `roulette-player-${id}`; }
 function loadIdentity() {
-  try { return JSON.parse(localStorage.getItem(storageKey(tableId))); } catch { return null; }
+  return RouletteUI.loadPlayerIdentity(tableId);
 }
 function saveIdentity(name) {
-  localStorage.setItem(storageKey(tableId), JSON.stringify({ playerId: myPlayerId, playerToken: myPlayerToken, name }));
+  RouletteUI.savePlayerIdentity(tableId, { playerId: myPlayerId, playerToken: myPlayerToken, name });
 }
 function clearIdentity() {
-  localStorage.removeItem(storageKey(tableId));
+  RouletteUI.clearPlayerIdentity(tableId);
 }
 
 function applyThemeInit() {

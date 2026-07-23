@@ -64,8 +64,30 @@
   </section>
 
   <section class="panel" aria-labelledby="boardHeading">
-    <h2 id="boardHeading">Table (live view)</h2>
-    <p class="board-instructions">This board is read-only &mdash; players place their own bets from their own device.</p>
+    <h2 id="boardHeading">Table</h2>
+
+    <div class="identity-banner" id="identityBanner" hidden></div>
+
+    <div class="join-banner" id="adminJoinPrompt">
+      <p class="board-instructions" style="margin:0;">Want to play too, not just run the wheel? Register yourself as a player.</p>
+      <form id="adminJoinForm" class="inline-form" style="margin-bottom:0;">
+        <div class="field">
+          <label for="adminPlayerName">Your name</label>
+          <input id="adminPlayerName" type="text" maxlength="24" placeholder="e.g. Marco" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Bet at this table</button>
+      </form>
+    </div>
+
+    <p class="board-instructions" id="boardInstructions">This board is read-only &mdash; players place their own bets from their own device.</p>
+
+    <div class="board-controls" id="chipTrayRow" hidden>
+      <div class="control-group">
+        <span class="control-label">Chip</span>
+        <div id="chipTray" class="chip-tray"></div>
+      </div>
+    </div>
+
     <div class="board-wrap">
       <div id="bettingBoard" class="betting-board"></div>
     </div>

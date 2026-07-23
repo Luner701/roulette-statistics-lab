@@ -385,6 +385,7 @@ h3 { font-size: 0.95rem; margin-bottom: 10px; }
 .join-banner {
   display: flex; flex-wrap: wrap; align-items: center; gap: 16px;
   background: var(--page); border: 1px solid var(--border); border-radius: 10px; padding: 14px 18px;
+  margin-bottom: 16px;
 }
 .join-banner .join-code { font-size: 1.6rem; font-weight: 700; letter-spacing: 0.08em; font-variant-numeric: tabular-nums; }
 .join-banner .join-meta { display: flex; flex-direction: column; gap: 2px; }

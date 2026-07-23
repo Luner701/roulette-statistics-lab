@@ -10,6 +10,11 @@ let spinning = false;
 let selectedPlayerIds = new Set();
 let pollTimer = null;
 
+let myPlayerId = null;
+let myPlayerToken = null;
+let activeChipValue = window.RouletteDomain.CHIP_VALUES[0];
+let latestState = null;
+
 if (!tableId || !adminToken) {
   document.getElementById('loadError').textContent = 'Missing or invalid admin link. Create a new table from the home page.';
 } else {
@@ -39,13 +44,67 @@ function init() {
   applyThemeInit();
   document.getElementById('themeToggle').addEventListener('click', toggleTheme);
 
+  const saved = RouletteUI.loadPlayerIdentity(tableId);
+  if (saved) { myPlayerId = saved.playerId; myPlayerToken = saved.playerToken; }
+
   RouletteUI.buildWheel(document.getElementById('wheelDisc'));
-  RouletteUI.buildBettingBoard(document.getElementById('bettingBoard'), { readOnly: true });
   RouletteUI.renderPayoutReference(document.getElementById('payoutRefBody'));
+  setupBoardForIdentity();
 
   wireForms();
   poll();
   pollTimer = setInterval(poll, 1500);
+}
+
+function setupBoardForIdentity() {
+  const iAmPlaying = !!myPlayerId;
+  document.getElementById('adminJoinPrompt').hidden = iAmPlaying;
+  document.getElementById('identityBanner').hidden = !iAmPlaying;
+  document.getElementById('chipTrayRow').hidden = !iAmPlaying;
+  document.getElementById('boardInstructions').textContent = iAmPlaying
+    ? 'Pick a chip, then click a spot on the table to bet. Right-click a spot to remove your own bet before the spin.'
+    : 'This board is read-only — register yourself above to bet, or players can place their own bets from their own device.';
+
+  RouletteUI.buildBettingBoard(document.getElementById('bettingBoard'), iAmPlaying ? {
+    onCellClick: (type, value) => placeBet(type, value),
+    onCellContextMenu: (type, value) => removeBetOnCell(type, value),
+  } : { readOnly: true });
+
+  if (iAmPlaying) {
+    RouletteUI.buildChipTray(document.getElementById('chipTray'), activeChipValue, (v) => {
+      activeChipValue = v;
+      RouletteUI.updateChipTraySelection(document.getElementById('chipTray'), activeChipValue);
+    });
+  }
+}
+
+async function placeBet(type, value) {
+  if (latestState && latestState.roundResolved) {
+    RouletteUI.showToast('Click New Bet to start the next round.');
+    return;
+  }
+  try {
+    const state = await RouletteAPI.placeBet(tableId, myPlayerId, myPlayerToken, type, value, activeChipValue);
+    render(state);
+  } catch (err) {
+    RouletteUI.showToast(err.message);
+  }
+}
+
+function removeBetOnCell(type, value) {
+  if (!latestState || latestState.roundResolved) return;
+  const bet = latestState.pendingBets.find(b => b.playerId === myPlayerId && b.type === type && b.value === value);
+  if (!bet) return;
+  removeBetById(bet.id);
+}
+
+async function removeBetById(betId) {
+  try {
+    const state = await RouletteAPI.removeBet(tableId, betId, myPlayerId, myPlayerToken);
+    render(state);
+  } catch (err) {
+    RouletteUI.showToast(err.message);
+  }
 }
 
 async function poll() {
@@ -90,10 +149,23 @@ function handleNewState(state) {
 }
 
 function render(state) {
+  latestState = state;
+
+  if (myPlayerId && !state.players.some(p => p.id === myPlayerId)) {
+    RouletteUI.clearPlayerIdentity(tableId);
+    myPlayerId = null;
+    myPlayerToken = null;
+    setupBoardForIdentity();
+  }
+  renderIdentity(state);
+
   renderJoinBanner(state);
   renderPlayers(state);
   RouletteUI.renderBoardChips(document.getElementById('bettingBoard'), state.pendingBets, state.players);
-  RouletteUI.renderBetsTable(document.getElementById('pendingBetsBody'), state.pendingBets, state.players, {});
+  RouletteUI.renderBetsTable(document.getElementById('pendingBetsBody'), state.pendingBets, state.players, {
+    canRemove: (b) => !!myPlayerId && b.playerId === myPlayerId,
+    onRemove: (b) => removeBetById(b.id),
+  });
   document.getElementById('pendingEmptyHint').hidden = state.pendingBets.length > 0;
   RouletteUI.renderRoundSummary(document.getElementById('roundSummary'), state.roundResolved, state.pendingBets, state.players);
   RouletteUI.renderResultsTicker(document.getElementById('resultsTicker'), state.history);
@@ -107,6 +179,14 @@ function render(state) {
 
   renderStats(state);
   updateActionButtons(state);
+}
+
+function renderIdentity(state) {
+  if (!myPlayerId) return;
+  const me = state.players.find(p => p.id === myPlayerId);
+  if (!me) return;
+  const banner = document.getElementById('identityBanner');
+  banner.innerHTML = `<span class="dot" style="background:${RouletteUI.playerColorVar(me.id, state.players)}"></span><strong>${RouletteUI.escapeHtml(me.name)}</strong><span class="muted">you're betting at this table too</span><span class="balance">${me.balance.toLocaleString()}</span>`;
 }
 
 function renderJoinBanner(state) {
@@ -222,6 +302,22 @@ function wireForms() {
       RouletteUI.showToast('Join link copied.');
     } catch {
       RouletteUI.showToast('Could not copy automatically — select and copy manually.');
+    }
+  });
+
+  document.getElementById('adminJoinForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const name = document.getElementById('adminPlayerName').value;
+    try {
+      const res = await RouletteAPI.registerPlayer(tableId, name);
+      myPlayerId = res.playerId;
+      myPlayerToken = res.playerToken;
+      RouletteUI.savePlayerIdentity(tableId, { playerId: myPlayerId, playerToken: myPlayerToken, name: name.trim() });
+      e.target.reset();
+      setupBoardForIdentity();
+      render(res.state);
+    } catch (err) {
+      RouletteUI.showToast(err.message);
     }
   });
 

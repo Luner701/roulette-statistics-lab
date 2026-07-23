@@ -16,6 +16,17 @@ const RouletteUI = (function () {
     return div.innerHTML;
   }
 
+  function identityStorageKey(tableId) { return `roulette-player-${tableId}`; }
+  function loadPlayerIdentity(tableId) {
+    try { return JSON.parse(localStorage.getItem(identityStorageKey(tableId))); } catch { return null; }
+  }
+  function savePlayerIdentity(tableId, identity) {
+    localStorage.setItem(identityStorageKey(tableId), JSON.stringify(identity));
+  }
+  function clearPlayerIdentity(tableId) {
+    localStorage.removeItem(identityStorageKey(tableId));
+  }
+
   function playerColorVar(playerId, players) {
     const idx = players.findIndex(p => p.id === playerId);
     return idx >= 0 ? `var(--player-${(idx % 8) + 1})` : 'var(--text-muted)';
@@ -557,6 +568,7 @@ const RouletteUI = (function () {
 
   return {
     escapeHtml, playerColorVar, showToast, showTooltip, positionTooltip, hideTooltip,
+    loadPlayerIdentity, savePlayerIdentity, clearPlayerIdentity,
     buildWheel, computeSpinRotation, animateWheel,
     buildBettingBoard, renderBoardChips, renderPayoutReference, cellSelector,
     buildChipTray, updateChipTraySelection,
