@@ -8,9 +8,38 @@ const { BET_TYPES, colorOf, WHEEL_ORDER, POCKETS } = require('./public/domain.js
 
 store.loadFromDisk();
 
+const OWNER_KEY = process.env.ADMIN_KEY || crypto.randomBytes(24).toString('hex');
+if (!process.env.ADMIN_KEY) {
+  console.log(`\nNo ADMIN_KEY environment variable set. Generated one for this run:\n\n    ${OWNER_KEY}\n\nUse it at /owner.html to see and manage all tables. Set ADMIN_KEY yourself to keep it stable across restarts.\n`);
+}
+
+function safeEqual(a, b) {
+  const bufA = Buffer.from(String(a || ''));
+  const bufB = Buffer.from(String(b || ''));
+  if (bufA.length !== bufB.length) return false;
+  return crypto.timingSafeEqual(bufA, bufB);
+}
+
 const app = express();
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
+
+function requireOwner(req, res, next) {
+  const key = (req.body && req.body.key) || req.query.key;
+  if (!key || !safeEqual(key, OWNER_KEY)) return res.status(403).json({ error: 'Invalid or missing owner key.' });
+  next();
+}
+
+app.get('/api/admin/tables', requireOwner, (req, res) => {
+  res.json({ tables: store.listTables() });
+});
+
+app.delete('/api/admin/tables', requireOwner, (req, res) => {
+  const ids = new Set((req.body && req.body.ids) || []);
+  if (req.body && req.body.all) store.listTables().forEach(t => ids.add(t.id));
+  store.deleteTables([...ids]);
+  res.json({ tables: store.listTables() });
+});
 
 function requireTable(req, res, next) {
   const table = store.getTable(req.params.id);

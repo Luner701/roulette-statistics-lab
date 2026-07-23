@@ -87,6 +87,26 @@ function cleanupIdle() {
 }
 setInterval(cleanupIdle, 60 * 60 * 1000).unref();
 
+function listTables() {
+  return Array.from(tables.values())
+    .sort((a, b) => b.lastActivity - a.lastActivity)
+    .map(t => ({
+      id: t.id,
+      joinCode: t.joinCode,
+      name: t.name,
+      adminToken: t.adminToken,
+      createdAt: t.createdAt,
+      lastActivity: t.lastActivity,
+      playerCount: t.players.length,
+      spinCount: t.history.length,
+    }));
+}
+
+function deleteTables(ids) {
+  ids.forEach(id => tables.delete(id));
+  scheduleSave();
+}
+
 module.exports = {
   loadFromDisk,
   createTable,
@@ -95,6 +115,8 @@ module.exports = {
   touch,
   scheduleSave,
   genToken,
+  listTables,
+  deleteTables,
   MAX_PLAYERS_PER_TABLE,
   MAX_PENDING_BETS,
 };

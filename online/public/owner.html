@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Service Owner Console &mdash; Roulette Statistics Lab</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-mark" aria-hidden="true">●</span>
+    <div>
+      <h1>Service Owner Console</h1>
+      <p class="tagline">See and manage every active table on this deployment.</p>
+    </div>
+  </div>
+  <button id="themeToggle" class="btn btn-ghost" type="button" aria-label="Toggle color theme">🌙</button>
+</header>
+
+<main class="landing" id="keyGate">
+  <div class="panel landing-card" style="max-width:420px; margin:40px auto;">
+    <h2>Enter owner key</h2>
+    <p>This is the <code>ADMIN_KEY</code> set on your server (or the one printed to the server logs on first run).</p>
+    <form id="keyForm">
+      <input id="ownerKey" type="password" placeholder="Owner key" autocomplete="off" required>
+      <button type="submit" class="btn btn-primary">Unlock</button>
+    </form>
+    <p class="landing-error" id="keyError"></p>
+  </div>
+</main>
+
+<main class="layout" id="dashboard" hidden>
+  <section class="panel" aria-labelledby="tablesHeading">
+    <div class="stats-header">
+      <h2 id="tablesHeading">Active tables</h2>
+      <div class="stats-actions">
+        <button id="refreshBtn" class="btn btn-ghost btn-small" type="button">Refresh</button>
+        <button id="lockBtn" class="btn btn-ghost btn-small" type="button">Lock</button>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table class="data-table" id="tablesTable">
+        <thead>
+          <tr>
+            <th><input type="checkbox" id="selectAllTables" title="Select all"></th>
+            <th>Name</th>
+            <th>Join code</th>
+            <th>Players</th>
+            <th>Spins</th>
+            <th>Created</th>
+            <th>Last active</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="tablesTableBody"></tbody>
+      </table>
+      <p class="empty-hint" id="tablesEmptyHint">No active tables right now.</p>
+      <div class="table-actions">
+        <button id="deleteSelectedBtn" class="btn btn-ghost btn-danger btn-small" type="button" disabled>Delete selected</button>
+        <button id="deleteAllBtn" class="btn btn-ghost btn-danger btn-small" type="button" disabled>Delete all tables</button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="foot-note">
+  Keep this page and your owner key private &mdash; anyone with the key can view and delete every table.
+</footer>
+
+<div class="toast" id="toast" hidden></div>
+
+<script src="api.js"></script>
+<script src="owner.js"></script>
+</body>
+</html>

@@ -30,5 +30,8 @@ const RouletteAPI = (function () {
     newRound: (tableId, adminToken) => req('POST', `/api/tables/${tableId}/new-round`, { adminToken }),
     resetTable: (tableId, adminToken) => req('POST', `/api/tables/${tableId}/reset`, { adminToken }),
     exportUrl: (tableId, adminToken) => `/api/tables/${tableId}/export?adminToken=${encodeURIComponent(adminToken)}`,
+
+    listAllTables: (key) => req('GET', `/api/admin/tables?key=${encodeURIComponent(key)}`),
+    deleteTables: (key, opts) => req('DELETE', '/api/admin/tables', { key, ids: opts.ids, all: opts.all }),
   };
 })();
